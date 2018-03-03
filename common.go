@@ -46,6 +46,8 @@ const (
 // transport wrapping.
 type OnConnectFunc func(remoteAddr string, rwc io.ReadWriteCloser) (io.ReadWriteCloser, error)
 
+type OnDisconnectFunc func(remoteAddr string)
+
 // LoggerFunc is an error logging function to pass to gorpc.SetErrorLogger().
 type LoggerFunc func(format string, args ...interface{})
 

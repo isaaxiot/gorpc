@@ -81,6 +81,9 @@ type Client struct {
 	// transport implementation.
 	OnConnect OnConnectFunc
 
+	// OnDisconnect is called whenever connection to server is broken
+	OnDisconnect OnDisconnectFunc
+
 	// The client calls this callback when it needs new connection
 	// to the server.
 	// The client passes Client.Addr into Dial().
@@ -736,7 +739,13 @@ func clientHandleConnection(c *Client, conn io.ReadWriteCloser) {
 	}
 
 	if err != nil {
-		c.LogError("%s", err)
+		if err == io.ErrUnexpectedEOF || err == io.EOF {
+			if c.OnDisconnect != nil {
+				c.OnDisconnect(c.Addr)
+			}
+		} else {
+			c.LogError("%s", err)
+		}
 		err = &ClientError{
 			Connection: true,
 			err:        err,
