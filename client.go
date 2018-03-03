@@ -69,6 +69,10 @@ type Client struct {
 	// Default value is DefaultBufferSize.
 	RecvBufferSize int
 
+	// Time to wait for redial.
+	// Default value is DefaultRedialDelay.
+	RedialDelay time.Duration
+
 	// OnConnect is called whenever connection to server is established.
 	// The callback can be used for authentication/authorization/encryption
 	// and/or for custom transport wrapping.
@@ -141,7 +145,9 @@ func (c *Client) Start() {
 	if c.RecvBufferSize <= 0 {
 		c.RecvBufferSize = DefaultBufferSize
 	}
-
+	if c.RedialDelay <= 0 {
+		c.RedialDelay = DefaultRedialDelay
+	}
 	c.requestsChan = make(chan *AsyncResult, c.PendingRequests)
 	c.clientStopChan = make(chan struct{})
 
@@ -665,7 +671,7 @@ func clientHandler(c *Client) {
 			select {
 			case <-c.clientStopChan:
 				return
-			case <-time.After(time.Second):
+			case <-time.After(c.RedialDelay):
 			}
 			continue
 		}
@@ -851,7 +857,9 @@ func clientReader(c *Client, r io.Reader, pendingRequests map[uint64]*AsyncResul
 	var wr wireResponse
 	for {
 		if err = d.Decode(&wr); err != nil {
-			err = fmt.Errorf("gorpc.Client: [%s]. Cannot decode response: [%s]", c.Addr, err)
+			if err != io.ErrUnexpectedEOF && err != io.EOF {
+				err = fmt.Errorf("gorpc.Client: [%s]. Cannot decode response: [%s]", c.Addr, err)
+			}
 			return
 		}
 

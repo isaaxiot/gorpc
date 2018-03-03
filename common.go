@@ -26,6 +26,9 @@ const (
 
 	// DefaultBufferSize is the default size for Client and Server buffers.
 	DefaultBufferSize = 64 * 1024
+
+	// DefaultRedialDelay is the default delay before trying to redial.
+	DefaultRedialDelay = 1 * time.Second
 )
 
 // OnConnectFunc is a callback, which may be called by both Client and Server
