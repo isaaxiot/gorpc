@@ -741,7 +741,9 @@ func clientHandleConnection(c *Client, conn io.ReadWriteCloser) {
 	if err != nil {
 		if isServerDisconnect(err) {
 			if c.OnDisconnect != nil {
-				c.OnDisconnect(c.Addr)
+				if c.OnDisconnect(c.Addr) {
+					c.Stop()
+				}
 			}
 		} else {
 			c.LogError("%s", err)
