@@ -61,7 +61,7 @@ type ConnStats struct {
 // Use stats returned from ConnStats.Snapshot() on live Client and / or Server,
 // since the original stats can be updated by concurrently running goroutines.
 func (cs *ConnStats) AvgRPCTime() time.Duration {
-	return time.Duration(float64(cs.RPCTime)/float64(cs.RPCCalls)) * time.Millisecond
+	return time.Duration(float64(cs.RPCTime)/float64(cs.RPCCalls)) * time.Nanosecond
 }
 
 // AvgRPCBytes returns the average bytes sent / received per RPC.

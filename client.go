@@ -739,7 +739,7 @@ func clientHandleConnection(c *Client, conn io.ReadWriteCloser) {
 	}
 
 	if err != nil {
-		if err == io.ErrUnexpectedEOF || err == io.EOF {
+		if isServerDisconnect(err) {
 			if c.OnDisconnect != nil {
 				c.OnDisconnect(c.Addr)
 			}
@@ -866,7 +866,7 @@ func clientReader(c *Client, r io.Reader, pendingRequests map[uint64]*AsyncResul
 	var wr wireResponse
 	for {
 		if err = d.Decode(&wr); err != nil {
-			if err != io.ErrUnexpectedEOF && err != io.EOF {
+			if !isServerDisconnect(err) {
 				err = fmt.Errorf("gorpc.Client: [%s]. Cannot decode response: [%s]", c.Addr, err)
 			}
 			return
@@ -899,8 +899,12 @@ func clientReader(c *Client, r io.Reader, pendingRequests map[uint64]*AsyncResul
 		}
 
 		c.Stats.incRPCCalls()
-		c.Stats.incRPCTime(uint64(time.Since(m.t).Seconds() * 1000))
+		c.Stats.incRPCTime(uint64(time.Since(m.t).Nanoseconds()))
 
 		close(m.done)
 	}
+}
+
+func isServerDisconnect(err error) bool {
+	return err == io.ErrUnexpectedEOF || err == io.EOF
 }

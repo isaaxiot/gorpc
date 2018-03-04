@@ -107,6 +107,8 @@ type Server struct {
 
 	serverStopChan chan struct{}
 	stopWg         sync.WaitGroup
+	clientsCount   int
+	mux            sync.Mutex
 }
 
 // Start starts rpc server.
@@ -155,6 +157,7 @@ func (s *Server) Start() error {
 
 	workersCh := make(chan struct{}, s.Concurrency)
 	s.stopWg.Add(1)
+	s.clientsCount = 0
 	go serverHandler(s, workersCh)
 	return nil
 }
@@ -176,6 +179,12 @@ func (s *Server) Serve() error {
 	}
 	s.stopWg.Wait()
 	return nil
+}
+
+func (s *Server) GetClientsCount() int {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	return s.clientsCount
 }
 
 func serverHandler(s *Server, workersCh chan struct{}) {
@@ -224,7 +233,11 @@ func serverHandler(s *Server, workersCh chan struct{}) {
 
 func serverHandleConnection(s *Server, conn io.ReadWriteCloser, clientAddr string, workersCh chan struct{}) {
 	defer s.stopWg.Done()
-
+	defer func() {
+		s.mux.Lock()
+		s.clientsCount--
+		s.mux.Unlock()
+	}()
 	if s.OnConnect != nil {
 		newConn, err := s.OnConnect(clientAddr, conn)
 		if err != nil {
@@ -234,6 +247,9 @@ func serverHandleConnection(s *Server, conn io.ReadWriteCloser, clientAddr strin
 		}
 		conn = newConn
 	}
+	s.mux.Lock()
+	s.clientsCount++
+	s.mux.Unlock()
 
 	var enabledCompression bool
 	var err error
@@ -377,7 +393,7 @@ func serveRequest(s *Server, responsesChan chan<- *serverMessage, stopChan <-cha
 
 	t := time.Now()
 	response, err := callHandlerWithRecover(s.LogError, s.Handler, clientAddr, s.Addr, request)
-	s.Stats.incRPCTime(uint64(time.Since(t).Seconds() * 1000))
+	s.Stats.incRPCTime(uint64(time.Since(t).Nanoseconds()))
 
 	if !skipResponse {
 		m.Response = response
