@@ -715,7 +715,7 @@ func clientHandleConnection(c *Client, conn io.ReadWriteCloser) {
 	}
 
 	if c.OnConnected != nil {
-		c.OnConnected(c.Addr)
+		go c.OnConnected(c.Addr)
 	}
 
 	stopChan := make(chan struct{})
