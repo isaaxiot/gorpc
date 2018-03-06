@@ -57,7 +57,7 @@ in [net/rpc](http://golang.org/pkg/net/rpc/):
 
 Dispatcher API provided by gorpc allows easily converting usual functions
 and/or struct methods into RPC versions on both client and server sides.
-See [Dispatcher examples](http://godoc.org/github.com/valyala/gorpc#Dispatcher)
+See [Dispatcher examples](http://godoc.org/github.com/isaaxiot/gorpc#Dispatcher)
 for more details.
 
 
@@ -77,7 +77,7 @@ to gorpc reduced required network bandwidth from 300 Mbit/s to 24 Mbit/s.
 Docs
 ====
 
-See http://godoc.org/github.com/valyala/gorpc .
+See http://godoc.org/github.com/isaaxiot/gorpc .
 
 
 Usage
