@@ -81,6 +81,9 @@ type Client struct {
 	// transport implementation.
 	OnConnect OnConnectFunc
 
+	// OnConnected is called whenever connection to server is established.
+	OnConnected OnConnectedFunc
+
 	// OnDisconnect is called whenever connection to server is broken
 	OnDisconnect OnDisconnectFunc
 
@@ -709,6 +712,10 @@ func clientHandleConnection(c *Client, conn io.ReadWriteCloser) {
 		c.LogError("gorpc.Client: [%s]. Error when writing handshake to server: [%s]", c.Addr, err)
 		conn.Close()
 		return
+	}
+
+	if c.OnConnected != nil {
+		c.OnConnected(c.Addr)
 	}
 
 	stopChan := make(chan struct{})
